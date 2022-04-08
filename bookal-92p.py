@@ -7,13 +7,12 @@
     즉 문제 잘 안읽음
 '''
 
-n, m, k = map(int, input().split())
-li = list(map(int, input().split()))
-li.sort(reverse=True)
-cnt = 0
-circle = 0
-
-# print(li)
+# 1차 작성
+# n, m, k = map(int, input().split())
+# li = list(map(int, input().split()))
+# li.sort(reverse=True)
+# cnt = 0
+# circle = 0
 # for num in range(n): 
 #     for _ in range(k):
 #         if circle <= m:
@@ -23,16 +22,33 @@ circle = 0
 #             break
 # print(cnt)
 
-while circle < m:
-    for _ in range(k):
-        if circle < m:
-            cnt += li[0]
-            circle+=1
-        else:
-            break
-    if circle < m:
-        cnt += li[1]
-        circle += 1
-    else:
-        break
+# 2차 작성 정답
+# n, m, k = map(int, input().split())
+# li = list(map(int, input().split()))
+# li.sort(reverse=True)
+# cnt = 0
+# circle = 0
+# while circle < m:
+#     for _ in range(k):
+#         if circle < m:
+#             cnt += li[0]
+#             circle+=1
+#         else:
+#             break
+#     if circle < m:
+#         cnt += li[1]
+#         circle += 1
+#     else:
+#         break
+# print(cnt)
+
+#3차 추가 아이디어 정답 (약 5:00)
+n, m, k = map(int, input().split())
+li = list(map(int, input().split()))
+li.sort(reverse=True)
+first_val = li[0]
+second_val = li[1]
+cnt = int(first_val*k*(m/(k+1))+second_val*(m/(k+1)))
+
 print(cnt)
+
