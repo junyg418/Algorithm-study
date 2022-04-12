@@ -8,37 +8,35 @@ Chapter 04 구현
 2차 실패-(57분)
 '''
 
-
-global pos
-global place
-global dx
-global dy
-global d
-global turned
-
+#입력받기
 n, m = map(int, input().split())
 x, y ,d = list(map(int, input().split()))
 # place = [[]*n for _ in range(m)]
 pos = [x,y]
-place = []
+
+#2차원배열 생성
+place = []  
 for _ in range(m):
     line = list(map(int, input().split()))
     place.append(line)
+
+#처음 땅의 개수 구하기
 fland_cnt = 0
 for i in place:
     fland_cnt += i.count(0)
 
+#전진 변화값 변수
 dx = [0,1,0,-1]  #이부분 해설 참조
 dy = [-1,0,1,0]
 
-def turn():
+def turn(): #왼쪽으로 회전하는 함수
     global d
     if d:
         d-1
     else:
         d=3
 
-def whatleft():
+def whatleft(): #왼쪽의 값 -> 0, 1로 반환
     lx = [-1, 0, 1, 0]
     ly = [0, -1, 0, 1]
     leftx = pos[0] + lx[d]
@@ -46,12 +44,12 @@ def whatleft():
     leftvalue =place[leftx][lefty]
     return leftvalue
 
-turned = 0
+turned = 0 #회전 defult값 초기화
 while True:
-    while  turned != 4:
-        print('turn:',turned)
-        print('pos:',pos)
-        if whatleft():
+    while  turned != 4: #한바퀴를 돌았을떄 멈추기
+        # print('turn:',turned)
+        # print('pos:',pos)
+        if whatleft(): #왼쪽에 바다일경우
             turn()
             turned +=1
         else:
