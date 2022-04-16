@@ -1,4 +1,3 @@
-# sys.stdin = open("input.txt","rt")
 '''
 스택(10828) S4
 푼 날자: 
