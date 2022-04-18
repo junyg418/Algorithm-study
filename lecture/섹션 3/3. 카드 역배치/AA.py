@@ -6,8 +6,10 @@ for _ in range(10):
     aidx = lists.index(a)
     bidx = lists.index(b)
 
+    front = lists[:aidx]
+    back = lists[bidx+1:]
     val = lists[aidx:bidx+1]
     del lists[aidx:bidx+1]
     val.reverse()
-    lists = lists[:aidx] + val + lists[bidx:]
+    lists = front + val + back
 print(lists)
