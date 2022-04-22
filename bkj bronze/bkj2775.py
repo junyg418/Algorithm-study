@@ -3,13 +3,17 @@
 푼 날자:2022-04-19-11:40
 1.
 '''
+import sys
 t = int(input())
 
-for _ in range(t):  
-    floor = int(input())
-    num = int(input())
-    f0 = [x for x in range(1, num+1)]
-    for k in range(floor):
+for _ in range(t):
+    floor= int(sys.stdin.readline())
+    num = int(sys.stdin.readline())
+    apt = [x for x in range(1, num+1)]
+    # 1 4 10
+    # 1 3 6
+    # 1 2 3
+    for j in range(floor):
         for i in range(1, num):
-            f0[i] += f0[i-1]
-    print(f0[-1])
+            apt[i] += apt[i-1]
+    print(apt[-1])

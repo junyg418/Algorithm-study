@@ -28,7 +28,6 @@ for i in range(267):
         tall = i
 print(mintime, tall)
 
-
 #1, 2차시도
 # import sys
 # sys.stdin = open('input.txt')
