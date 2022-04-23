@@ -1,6 +1,7 @@
 '''
 뒤집기(1439)S5
 푼 시간:2022-04-22
+1.성공
 '''
 import sys
 strval = sys.stdin.readline().rstrip()

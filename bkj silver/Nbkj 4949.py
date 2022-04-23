@@ -1,7 +1,7 @@
 '''
 균형잡힌 세상(4949)
 푼 날자:2022-04-19-11:26
-1
+1.실패
 '''
 import sys
 sys.stdin = open('input.txt')
