@@ -9,7 +9,7 @@ from sys import stdin #dot 연산 최적화
 
 stdin = open('input.txt')
 n = int(stdin.readline())
-nums = [int(stdin.readline().rstrip()) for _ in range(n) ]
+nums = [int(stdin.readline().rstrip()) for _ in range(n)]
     
 
 result = []
