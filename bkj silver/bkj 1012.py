@@ -9,7 +9,6 @@ why -> 제귀함수의 최대깊이설정떄문에
 
 import sys
 sys.setrecursionlimit(10**6)
-# sys.stdin = open('input')  #지울꺼
 testcase = int(input())
 
 def dfs(x, y, mapp):
