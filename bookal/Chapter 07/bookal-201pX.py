@@ -6,6 +6,7 @@ Chapter 07 이진 탐색
 1. 1차시도 실패
 2. 함수모형으로 풀이보고 작성
 '''
+#풀이 보고 작성
 n, m = map(int, input().split())
 array = list(map(int, input().split()))
 
