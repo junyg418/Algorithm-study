@@ -38,7 +38,7 @@ for _ in range(testcase):
                 if x_pos != -1 and y_pos != -1:
                     print(1)
                     breaker = True
-                    continue
+                    break
             else:
                 x_pos =  x[x_idx[i-1]+1:x_idx[i]].find(alpa)
                 y_pos =  y[y_idx[i-1]+1:y_idx[i]].find(alpa)
