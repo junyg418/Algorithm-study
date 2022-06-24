@@ -9,8 +9,8 @@
 #     a = input()
 #     dic[a] = 0
 # print(dic)
-#a b c d e ~ z를 입력하여 딕셔너리 쉽게 만듦
-#-------------------
+# a b c d e ~ z를 입력하여 딕셔너리 쉽게 만듦
+# -------------------
 
 s = input()
 dic = {'a': 0, 'b': 0, 'c': 0, 'd': 0, 'e': 0, 'f': 0, 'g': 0, 
@@ -22,3 +22,13 @@ for string in s:
 
 for num in dic.values():
     print(num, end=' ')
+
+# 다른방법(제자씨 제작)
+# a=["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", 
+# "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
+# ex=[]
+# s=input()
+# for i in s:
+#     ex.append(i)
+# for i in a:
+#     print(ex.count(i),end="")
