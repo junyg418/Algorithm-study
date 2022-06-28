@@ -9,7 +9,6 @@ while stack < x:
     x -= stack
     stack += 1
 if stack%2==0: #짝수
-
     print(f'{x}/{stack-x+1}')
 else: # 홀수 
     print(f'{stack-x+1}/{x}')
