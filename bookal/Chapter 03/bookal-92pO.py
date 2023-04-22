@@ -45,12 +45,12 @@ Chapter 03 그리디(탐욕법)
 # print(cnt)
 
 #3차 추가 아이디어 정답 (약 5:00)
-n, m, k = map(int, input().split())
-li = list(map(int, input().split()))
-li.sort(reverse=True)
-first_val = li[0]
-second_val = li[1]
-cnt = int(first_val*k*(m/(k+1))+second_val*(m/(k+1)))
+# n, m, k = map(int, input().split())
+# li = list(map(int, input().split()))
+# li.sort(reverse=True)
+# first_val = li[0]
+# second_val = li[1]
+# cnt = int(first_val*k*(m/(k+1))+second_val*(m/(k+1)))
 
-print(cnt)
+# print(cnt)
 
