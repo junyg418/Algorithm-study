@@ -1,6 +1,8 @@
 class Game:
     def __init__(self) -> None:
-        self.map = Map(tuple(map(int, input().split())))
+        self.passed_turn = 0
+
+        self.map = Map(tuple(map(int, input().split()))) # 지도 초기화
         
         self.player_control = input()
         
@@ -30,19 +32,25 @@ class Game:
             chest = Chest(item_type=input_item_type, info=input_item_type)
             pos = (input_row, input_column)
             self.chest_data_dic[pos] = chest
-            
+
         
 
 class Map:
     def __init__(self, coordinate:tuple) -> None:
         row, column = coordinate
         self.field = [input() for _ in range(row)]
-
+        self.player_start_pos = (0, 0)
+        self.boss_start_pos = (0, 0)
+        
         self.monster_count = 0
         self.chest_count = 0
-        # self.object_field = [[] for _ in range(row)]
+        self.object_field = [[] for _ in range(row)]
 
-        for map_string_data in self.field:
+        for x, map_string_data in enumerate(self.field):
+            if (y:=map_string_data.find("@")) != -1:
+                self.player_start_pos = (x, y)
+            if (y:=map_string_data.find("M")) != -1:
+                self.boss_start_pos = (x, y)
             for object_data in map_string_data:
                 if object_data == ".":
                     pass
@@ -51,7 +59,29 @@ class Map:
 
                 elif object_data == "B":
                     self.chest_count += 1
+        
+    
+    def __init__objectField(self, monster_data:dict, chest_data:dict)->None:
+        self.object_field[self.player_start_pos[0]][self.player_start_pos[1]] = 0
+        for x, map_string_data in enumerate(self.field):
+            for y, object_data in enumerate(map_string_data):
+                if object_data == ".":
+                    self.object_field[x][y] = 0
+                elif object_data == "&":
+                    self.object_field[x][y] = monster_data[(x,y)]
+                elif object_data == "B":
+                    self.object_field[x][y] = chest_data[(x,y)]
+                elif object_data == "#":
+                    self.object_field[x][y] = Wall()
+                elif object_data == "^":
+                    self.object_field[x][y] = SpikeTrap()
 
+def test_case():
+    if __name__ == "__main__":
+        map_test = Map(list(map(int, input().split())))
+        print(map_test.player_start_pos)
+
+test_case()
 
 
 class Player:
@@ -110,8 +140,9 @@ class SpikeTrap:
     def __init__(self) -> None:
         # self.pos = pos
         pass
-
-    def attak(self, player:Player):
+    
+    @staticmethod
+    def attak(player:Player):
         damage = 5
         player.current_hp -= damage
         
