@@ -1,6 +1,3 @@
-from diaProject import Player
-
-
 class Game:
     def __init__(self) -> None:
         self.passed_turn = 0
@@ -12,6 +9,8 @@ class Game:
         self.player_control = input()
         self.PLAYER = Player()
         
+        self.boss_spawn_point = self.map.boss_start_pos # 값 변경 X
+
         self.monster_count = self.map.monster_count
         self.chest_count = self.map.chest_count
 
@@ -27,36 +26,168 @@ class Game:
                 "hp":input_hp,
                 "exp":input_exp
             }
-            monster = Monster(**kwargs)
-            pos = (int(input_row)-1, int(input_column)-1)
+            pos = (int(input_row)-1, int(input_column)-1) # 조정된 좌표
+            if self.boss_spawn_point == pos:
+                monster = BossMonseter(**kwargs)
+            else:
+                monster = Monster(**kwargs)
             self.monster_data_dic[pos] = monster
         
         # 상자 데이터 초기화
         self.chest_data_dic = {}
         for _ in range(self.chest_count):
             input_row, input_column, input_item_type, input_item_info = input().split()
-            chest = Chest(item_type=input_item_type, info=input_item_type)
+            chest = Chest(item_type=input_item_type, info=input_item_info)
             pos = (int(input_row)-1, int(input_column)-1)
             self.chest_data_dic[pos] = chest
         
         self.map.init_objectField(self.monster_data_dic, self.chest_data_dic)
-
+        self.object_map = self.map.object_field
+        self.current_map = self.map.field
     
         self.move_object = Move(self.player_control, self.player_spawn_point, self.map.wall_coordinate_list, self.map_size)
-        self.move_data = self.move_object.calculateMovement()
+        self.move_data = self.move_object.move_process_data
 
 
-    def turnPass(self):
+    def run(self):
+        for pos in self.move_data:
+            turn_reuslt = self.turnPass(pos)
+            if type(turn_reuslt) == str:
+                if self.resurrection():
+                    self.run()
+                    return
+                else:
+                    self.endGame(turn_reuslt)
+                    return
+
+            elif type(turn_reuslt) == bool:
+                if turn_reuslt:
+                    self.endGame(True)
+                    return
+            
+        self.endGame(False)
+
+
+    def turnPass(self, current_pos:tuple):
+        """
+        :return:
+            None / 아무일도 없었다
+            str / 죽음 -> resurrection 호출 해야함
+            bool / True -> 보스 죽임
+        """
+        turn_result = None
+
         self.passed_turn += 1
+        object_data = self.object_map[current_pos[0]][current_pos[1]]
+
+
+        if type(object_data) == int:
+            pass
+
+        elif type(object_data) == Monster: # 몬스터와 싸움
+            current_monster = self.monster_data_dic[current_pos]
+            if self.current_map[current_pos[0]][current_pos[1]] != ".":
+                if current_monster.run(self.PLAYER): # return value killed: bool | True -> 플레이어가 죽임 / False -> 플레이어가 죽음
+                    exp = current_monster.EXP
+                    if "EX" in self.PLAYER.accessories_list:
+                        exp = int(exp*1.2)
+                    
+                    self.PLAYER.EXP += exp
+                    self.current_map[current_pos[0]] = self.changeStrValue(self.current_map[current_pos[0]], current_pos[1], ".")
+                    # self.current_map[current_pos[0]][current_pos[1]] = "."
+                    
+                    # RE 악세서리 연산
+                    if "RE" in self.PLAYER.accessories_list:
+                        self.PLAYER.current_hp += 3
+                        if self.PLAYER.current_hp > self.PLAYER.HP:
+                            self.PLAYER.current_hp = self.PLAYER.HP
+
+                else: # 플레이어 사망
+                    turn_result = current_monster.name
+
+        elif type(object_data) == BossMonseter:
+            if "HU" in self.PLAYER.accessories_list:
+                self.PLAYER.current_hp = self.PLAYER.HP
+
+            current_monster = self.monster_data_dic[current_pos]
+            if current_monster.run(self.PLAYER): # return value killed: bool | True -> 플레이어가 죽임 / False -> 플레이어가 죽음
+                exp = current_monster.EXP
+                if "EX" in self.PLAYER.accessories_list:
+                    exp = int(exp*1.2)
+                
+                self.PLAYER.EXP += exp
+                self.current_map[current_pos[0]] = self.changeStrValue(self.current_map[current_pos[0]], current_pos[1], ".")
+                # self.current_map[current_pos[0]][current_pos[1]] = "."
+                
+                # RE 장신구 연산
+                if "RE" in self.PLAYER.accessories_list:
+                    self.PLAYER.current_hp += 3
+                    if self.PLAYER.current_hp > self.PLAYER.HP:
+                        self.PLAYER.current_hp = self.PLAYER.HP
+
+                turn_result = True # 게임 종료
+
+            else: # 플레이어 사망
+                turn_result = current_monster.name
         
+        elif type(object_data) == Chest:
+            current_chest = self.chest_data_dic[current_pos]
+            if not current_chest.got_item:
+                current_chest.getItem(self.PLAYER)
+                current_chest.got_item = True
+                self.current_map[current_pos[0]] = self.changeStrValue(self.current_map[current_pos[0]], current_pos[1], ".")
+        
+        elif type(object_data) == SpikeTrap:
+            SpikeTrap.attak(self.PLAYER)
+            if 0 >= self.PLAYER.current_hp:
+                turn_result = "SPIKE TRAP"
 
+        self.PLAYER.isLevelUp()
+        return turn_result
+    
+    def changeStrValue(self, origin_value:str, index:int, change_value:str)->str:
+        result = origin_value[:index] + change_value + origin_value[index+1:]
+        return result
 
-    def resurrection(self):
-        self.player_control[self.passed_turn:]
-        self.move_object = Move(self.player_control, self.player_spawn_point, self.map.wall_coordinate_list, self.map_size)
-        self.move_data = self.move_object.calculateMovement()
-        self.PLAYER.accessories_list.remove("RE")
+    def resurrection(self) -> bool:
+        """
+        :return:
+            True / 부활 성공
+            False / 부활 실패
+        """
+        if "RE" in self.PLAYER.accessories_list:
+            self.player_control[self.passed_turn:]
+            self.move_object = Move(self.player_control, self.player_spawn_point, self.map.wall_coordinate_list, self.map_size)
+            self.move_data = self.move_object.move_process_data
 
+            self.PLAYER.current_hp = self.PLAYER.HP
+            self.PLAYER.accessories_list.remove("RE")
+            return True
+        else:
+            return False
+    
+    def endGame(self, finish_by):
+        """
+        :param finish_by:
+            str / 죽임 당할 때
+            bool -> True / 보스 처치했을 경우
+            bool -> False / 입력 끝났을 경우
+        """
+        for row in self.current_map:
+            print(row)
+        print(f"Passed Turns : {self.passed_turn}")
+        print(f"""LV : {self.PLAYER.LV}
+HP : {self.PLAYER.current_hp}/{self.PLAYER.HP}
+ATT : {self.PLAYER.ATK}+{self.PLAYER.weaponDamage}
+DEF : {self.PLAYER.DEF}+{self.PLAYER.armorDefense}
+EXP : {self.PLAYER.EXP}/{self.PLAYER.LV * 5}""")
+        if type(finish_by) == str:
+            print(f"YOU HAVE BEEN KILLED BY {finish_by}")
+        else:
+            if finish_by:
+                print("YOU WIN!")
+            else:
+                print("Press any key to continue.")
 
 
 class Map:
@@ -69,7 +200,16 @@ class Map:
         
         self.monster_count = 1
         self.chest_count = 0
-        self.object_field = [[0 for _ in range(column)] for _ in range(row)]
+        """
+        object_field
+        int {
+          0 : None,
+          -1 : wall
+        }
+        Monster : Monster 객체
+        SpikeTrap :SpikeTrap 객체
+        """
+        self.object_field = [[0 for _ in range(column)] for _ in range(row)] 
 
         for x, map_string_data in enumerate(self.field):
             if (y:=map_string_data.find("@")) != -1:
@@ -100,6 +240,8 @@ class Map:
                     self.wall_coordinate_list.append((x,y))
                 elif object_data == "^":
                     self.object_field[x][y] = SpikeTrap()
+                elif object_data == "M":
+                    self.object_field[x][y] = monster_data[(x,y)]
             
 
 
@@ -121,18 +263,23 @@ class Player:
         defense = self.DEF + self.armorDefense
         return defense
 
+    def getAttack(self):
+        attack = self.ATK + self.weaponDamage
+        return attack
+
     def isLevelUp(self) -> None:
         """
         레벨 올리기 및 확인 하는 함수
         """
         # need_exp = 5 * self.LV
-        while self.EXP <= (5 * self.LV): # 경험치 확인
+        while self.EXP >= (5 * self.LV): # 경험치 확인
             self.EXP = 0
             self.LV += 1
             self.ATK += 2
             self.DEF += 2
             self.HP += 5
             self.current_hp = self.HP # 체력 모두 회복
+        
 
 
 class Move:
@@ -170,7 +317,7 @@ class Move:
         
         self.calculateMovement()
 
-    def calculateMovement(self)-> list:
+    def calculateMovement(self)-> None:
         tmp_pos = self.player_pos
         for move_data in self.move_encryption_data:
             origin_pos = tmp_pos
@@ -191,25 +338,8 @@ class Move:
             self.move_process_data.append(tmp_pos)
 
 
-
-class Object:
-    pass
-
-
-class Blank:
-    def __init__(self) -> None:
-        pass
-        
-
-class Wall:
-    def __init__(self) -> None:
-        # self.pos = pos
-        pass
-
-
 class SpikeTrap:
     def __init__(self) -> None:
-        # self.pos = pos
         pass
     
     @staticmethod
@@ -265,77 +395,103 @@ class Monster:
         self.HP = hp
         self.EXP = exp
 
-        self.current_hp = hp
+        self.killed = False # 몬스터를 죽이지 못했다면 false 를 반환
 
-    def attack(self, player:Player):
+    def attack(self, player:Player)->None:
         damage = self.ATK - player.getDefense()
-        player
-
-
-class BossMonseter(Monster):
-    pass
-
-
-class Accessories:
-    def __init__(self, player:Player) -> None:
-        self.player = player
-
-
-class AccessoriesHR(Accessories):
-    def __init__(self, player: Player) -> None:
-        super().__init__(player)
-
-    def effect(self):
-        self.player.current_hp += 3
-        if self.player.current_hp > self.player.HP:
-            self.player.current_hp = self.player.HP
-
-class AccessoriesRE(Accessories):
-    def __init__(self, player: Player) -> None:
-        super().__init__(player)
+        player.current_hp -= damage
+        
     
-    def effect(self):
-        pass
+    def run(self, player:Player) -> bool:
+        """
+        :param player:
+            Player / 플래이어 객체
+        :return:
+            플래이어가 이겼다면   True 를 반환
+            플래이어가 패배했다면 False를 반환
+        """
+        damage_stack = []
+        damage_multiple = 1
+        if damage_stack:
+            if "CO" in player.accessories_list:
+                damage_multiple = 2
+                if "DX" in player.accessories_list:
+                    damage_multiple = 3
+                
+        damage = player.getAttack() - self.DEF
+        if damage < 0:
+            damage = 0
+        damage_stack.append(damage*damage_multiple)
 
+        while(self.HP >= sum(damage_stack)):
+            self.attack(player) # 몬스터가 공격
+            if player.current_hp <= 0:
+                return self.killed
 
-class AccessoriesCO(Accessories):
-    def __init__(self, player: Player) -> None:
-        super().__init__(player)
+            damage = player.getAttack() - self.DEF # 플레이어가 공격
+            if damage < 0:
+                damage = 0
+            damage_stack.append(damage)
 
-    def effect(self):
-        pass
+        self.killed = True
+        return self.killed
 
-class AccessoriesEX(Accessories):
-    def __init__(self, player: Player) -> None:
-        super().__init__(player)
+                
+        
+class BossMonseter(Monster):
+    def __init__(self, name: str, atk: int, defense: int, hp: int, exp: int) -> None:
+        super().__init__(name, atk, defense, hp, exp)
+    
+    def run(self, player: Player) -> bool:
+        """
+        :param player:
+            Player / 플래이어 객체
+        :return:
+            플래이어가 이겼다면   True 를 반환
+            플래이어가 패배했다면 False를 반환
+        """
+        damage_stack = []
+        damage_multiple = 1
+        if damage_stack:
+            if "CO" in player.accessories_list:
+                damage_multiple = 2
+                if "DX" in player.accessories_list:
+                    damage_multiple = 3
+                
+        damage = player.getAttack() - self.DEF
+        if damage < 0:
+            damage = 0
+        damage_stack.append(damage*damage_multiple)
+        if self.HP <= damage:
+            return True # 보스 죽음
+        
+        # 보스 공격 -> HU 장신구 때문
+        if "HU" in player.accessories_list:
+            pass # 첫공격 무효
+        else:
+            self.attack(player)
+            if player.current_hp < 0:
+                return self.killed
+        
+        while(True):
+            # 플레이어가 공격
+            damage = player.getAttack() - self.DEF 
+            if damage < 0:
+                damage = 0
+            damage_stack.append(damage)
+            if self.HP <= sum(damage_stack):
+                break
+            
+            # 몬스터가 공격
+            self.attack(player) 
+            if player.current_hp < 0:
+                return self.killed
 
-    def effect(self):
-        pass
+        self.killed = True
+        return self.killed
 
-
-class AccessoriesDX(Accessories):
-    def __init__(self, player: Player) -> None:
-        super().__init__(player)
-
-    def effect(self):
-        pass
-
-
-class AccessoriesHU(Accessories):
-    def __init__(self, player: Player) -> None:
-        super().__init__(player)
-
-    def effect(self):
-        pass
-
-
-class AccessoriesCU(Accessories):
-    def __init__(self, player: Player) -> None:
-        super().__init__(player)
-
-    def effect(self):
-        pass
-
+    def attack(self, player: Player):
+        return super().attack(player)
 
 
 def test_case():
@@ -345,7 +501,6 @@ def test_case():
         # m = Move("RRRUULLULUDDDLDRDRDRRRURRULUULLU", )
         # print(m.move_process_data)
         g = Game()
-        print(g.move_object.move_process_data)
-        pass
+        g.run()
 
 test_case()
