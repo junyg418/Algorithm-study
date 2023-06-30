@@ -389,8 +389,9 @@ class Chest:
         elif self.item_type == "O":
             if len(player.accessories_list) < 4:
                 if self.info in player.accessories_list:
-                    if self.info == "CU":
-                        player.accessories_list.append(self.info)
+                    # if self.info == "CU":
+                    #     player.accessories_list.append(self.info)
+                    pass
                 else:
                     player.accessories_list.append(self.info)
 
@@ -483,7 +484,7 @@ class BossMonseter(Monster):
             pass # 첫공격 무효
         else:
             self.attack(player)
-            if player.current_hp < 0:
+            if player.current_hp <= 0:
                 return self.killed
         
         while(True):
@@ -495,7 +496,7 @@ class BossMonseter(Monster):
             
             # 몬스터가 공격
             self.attack(player) 
-            if player.current_hp < 0:
+            if player.current_hp <= 0:
                 return self.killed
 
         self.killed = True
