@@ -27,6 +27,7 @@ def getCount(start_pos:tuple, sample:list)->int:
         for c in range(8):
             if input_value[ro+r][co+c] == sample[r][c]:
                 count += 1
+    print(count)
     return count
 
 
